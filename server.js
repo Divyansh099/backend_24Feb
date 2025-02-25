@@ -11,7 +11,7 @@ app.get('/', (_, res) => {
   res.send("Backend is running on Render!");
 });
 
-// New endpoint for scraping webpage titles
+// New endpoint for scraping webpage titles, H1 tags, and meta data
 app.get('/scrape', async (req, res) => {
   const { url } = req.query;
 
@@ -23,8 +23,17 @@ app.get('/scrape', async (req, res) => {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
     const title = $('title').text();
+    const h1 = $('h1').text();
+    const metaDescription = $('meta[name="description"]').attr('content');
+    const metaKeywords = $('meta[name="keywords"]').attr('content');
 
-    res.json({ url, title });
+    res.json({
+      url,
+      title,
+      h1,
+      metaDescription,
+      metaKeywords,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to scrape the webpage' });
   }
