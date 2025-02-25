@@ -1,42 +1,36 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const scrapeData = require('./scraper');
-
+const axios = require('axios');
+const cheerio = require('cheerio');
 const app = express();
 
-app.use(morgan('combined'));
-app.use(cors());
+// Basic middleware and routes
 app.use(express.json());
 
-app.get('/', (_, res) => res.send("Backend is running on Render!"));
+app.get('/', (_, res) => {
+  res.send("Backend is running on Render!");
+});
 
-app.post('/api/scrape', async (req, res) => {
-  const { url } = req.body;
+// New endpoint for scraping webpage titles
+app.get('/scrape', async (req, res) => {
+  const { url } = req.query;
+
   if (!url) {
-    return res.status(400).json({ success: false, error: "Please provide a URL to scrape." });
+    return res.status(400).json({ error: 'URL parameter is required' });
   }
+
   try {
-    const data = await scrapeData(url);
-    if (!data) {
-      return res.status(500).json({ success: false, error: "Scraping returned no data." });
-    }
-    res.json({ success: true, data });
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+    const title = $('title').text();
+
+    res.json({ url, title });
   } catch (error) {
-    console.error("Scraping error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to scrape the website.",
-      details: error.message,
-    });
+    res.status(500).json({ error: 'Failed to scrape the webpage' });
   }
 });
 
-// Ensure the app binds to the port provided by Render
-const PORT = process.env.PORT;
-if (!PORT) {
-  console.error("PORT environment variable is not set. Exiting.");
-  process.exit(1);
-}
-app.listen(PORT, '0.0.0.0', () => console.log(`Express server running on port ${PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
