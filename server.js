@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const scrapeData = require('./scraper'); // Make sure scraper.js is in the same folder
+const scrapeData = require('./scraper');
 
 const app = express();
 
@@ -33,7 +33,7 @@ app.post('/api/scrape', async (req, res) => {
   }
 });
 
-// Ensure PORT is defined and bind to all interfaces
+// Ensure the app binds to the port provided by Render
 const PORT = process.env.PORT;
 if (!PORT) {
   console.error("PORT environment variable is not set. Exiting.");
